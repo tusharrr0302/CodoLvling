@@ -35,11 +35,12 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/map" element={<WorldMap />} />
           <Route path="/practice" element={<Practice />} />
-          <Route path="/question/:id" element={<Question />} />
+          <Route path="/question/:problemId" element={<Question />} />
           <Route path="/pvp" element={<BattleLobby />} />
           <Route path="/multiplayer-arena" element={<MultiplayerArena />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/logic-lab" element={<LogicLab />} />
+          <Route path="/logic-lab/:topicId" element={<Placeholder title="Logic Lab Topic" />} />
           <Route path="/codex" element={<Codex />} />
           <Route path="/leaderboard" element={<Placeholder title="Leaderboard" />} />
         </Routes>

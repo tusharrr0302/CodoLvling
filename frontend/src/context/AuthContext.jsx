@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useUser, useAuth as useClerkAuth, useClerk } from '@clerk/clerk-react';
 
 // -------------------------------------------------------
@@ -26,6 +26,7 @@ export function AuthProvider({ children }) {
     const { isLoaded, isSignedIn, user: clerkUser } = useUser();
     const { getToken } = useClerkAuth();
     const { signOut } = useClerk();
+    const [token, setToken] = useState(null);
 
     // Build a user object that matches what existing consumers expect.
     // We lazily get the token so callers that need it can await getToken().
@@ -35,12 +36,24 @@ export function AuthProvider({ children }) {
             username: clerkUser.username ?? clerkUser.firstName ?? clerkUser.emailAddresses[0]?.emailAddress?.split('@')[0] ?? clerkUser.id,
             email: clerkUser.emailAddresses[0]?.emailAddress ?? '',
             avatarUrl: clerkUser.imageUrl ?? null,
-            // hasSeenIntro persists in localStorage so it survives Clerk re-auths
+            token: token,
             hasSeenIntro: localStorage.getItem('codo_has_seen_intro') === 'true',
-            // Expose a live getter so consumers can await getToken() themselves
             getToken,
         }
         : null;
+
+    // Resolve token if user is signed in
+    useEffect(() => {
+        const fetchToken = async () => {
+            if (isSignedIn) {
+                const t = await getToken();
+                setToken(t);
+            } else {
+                setToken(null);
+            }
+        };
+        fetchToken();
+    }, [isSignedIn, getToken]);
 
     const completeIntro = () => {
         localStorage.setItem('codo_has_seen_intro', 'true');
