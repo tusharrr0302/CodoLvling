@@ -1,0 +1,776 @@
+/* Question page — full screen layout, no navbar offset */
+.question-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg-base);
+    --q-gap: 8px;
+    position: relative;
+}
+
+/* Top bar */
+.question-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--navbar-h);
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-surface);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.question-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.question-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.question-breadcrumb .sep {
+    color: var(--text-muted);
+}
+
+.question-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.already-solved {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--success);
+}
+
+/* Body layout */
+.question-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* Left panel — problem description */
+.question-left {
+    width: 40%;
+    min-width: 340px;
+    max-width: 520px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.question-desc-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Mission header */
+.mission-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mission-title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+/* Mission body */
+.mission-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.mission-line {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-style: italic;
+}
+
+/* Examples */
+.desc-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.examples-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.example-block {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.example-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.example-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    min-width: 54px;
+}
+
+.example-value {
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    background: var(--bg-surface);
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+/* Hint */
+.hint-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.hint-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition);
+    width: fit-content;
+}
+
+.hint-toggle:hover,
+.hint-toggle.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-subtle);
+}
+
+.hint-body {
+    padding: 14px 16px;
+    background: var(--accent-subtle);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    border-radius: var(--radius-sm);
+}
+
+.hint-body p {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    line-height: 1.7;
+}
+
+/* Explanation */
+.explanation-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.explanation-text {
+    font-size: 0.875rem;
+    line-height: 1.7;
+}
+
+/* Right panel */
+.question-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* Editor */
+.editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 3px solid var(--border);
+    background: var(--bg-surface);
+    flex-shrink: 0;
+}
+
+/* Editor Toolbar */
+.editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 3px solid var(--border);
+    background: var(--bg-surface);
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.editor-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.editor-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editor-lang {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.editor-body {
+    flex: 1;
+    overflow: hidden;
+}
+
+.editor-body .cm-editor {
+    height: 100%;
+    font-size: 0.875rem;
+}
+
+.editor-body .cm-scroller {
+    overflow: auto;
+    height: 100%;
+}
+
+/* Test case panel */
+.testcase-panel {
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-surface);
+    flex-shrink: 0;
+    transition: height var(--transition-slow);
+}
+
+.testcase-panel.open {
+    max-height: 45%;
+}
+
+.testcase-panel.closed {
+    max-height: 44px;
+}
+
+.testcase-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.testcase-panel-header:hover {
+    background: var(--bg-hover);
+}
+
+.run-summary {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.testcase-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Submit banner */
+.submit-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+}
+
+.submit-banner.pass {
+    background: var(--success-bg);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: var(--success);
+}
+
+.submit-banner.fail {
+    background: var(--error-bg);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--error);
+}
+
+.submit-banner-title {
+    font-weight: 600;
+}
+
+.submit-banner-sub {
+    font-size: 0.8125rem;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
+/* Test case results */
+.tc-result {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.tc-result.pass {
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+.tc-result.fail {
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.tc-result.error {
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.tc-result-header {
+    padding: 8px 12px;
+    background: var(--bg-elevated);
+}
+
+.tc-result-index {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.tc-duration {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+.tc-result-body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tc-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tc-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    min-width: 60px;
+}
+
+.tc-value {
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+}
+
+.tc-value.correct {
+    color: var(--success);
+}
+
+.tc-value.wrong {
+    color: var(--error);
+}
+
+.tc-empty {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    padding: 8px 0;
+}
+
+/* Test case list */
+.tc-list {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tc-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.tc-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8125rem;
+    padding: 6px 0;
+}
+
+.tc-item-num {
+    color: var(--text-muted);
+    font-weight: 600;
+    width: 16px;
+}
+
+.tc-item-input {
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+}
+
+.tc-item-arrow {
+    color: var(--text-muted);
+}
+
+.tc-item-expected {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+}
+
+/* Add case form */
+.add-case-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+/* ----------------------------------
+   V3 BATTLE ARENA STYLES 
+   --------------------------------- */
+
+.battle-arena {
+    flex-shrink: 0;
+    height: 200px;
+    background: #fff;
+    border-bottom: 4px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    position: relative;
+    overflow: hidden;
+    background-image: radial-gradient(rgba(0, 0, 0, 0.06) 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+    background-color: #FCF6E5;
+}
+
+.back-btn {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 10;
+    background: #fff;
+}
+
+.battle-entity {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+}
+
+.battle-avatar {
+    font-size: 3rem;
+    width: 80px;
+    height: 80px;
+    border-radius: 0;
+    background: #FFD600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid #000;
+    box-shadow: 5px 5px 0 #000;
+    flex-shrink: 0;
+}
+
+.enemy-avatar {
+    font-size: 3.5rem;
+}
+
+.battle-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.align-right {
+    align-items: flex-end;
+    text-align: right;
+}
+
+.battle-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+}
+
+.hp-bar-wrap {
+    width: 200px;
+    height: 16px;
+    background: rgba(0, 0, 0, 0.08);
+    border: 3px solid #000;
+    overflow: hidden;
+    box-shadow: 4px 4px 0 #FFD600;
+}
+
+.hp-bar-wrap.right {
+    transform: scaleX(-1);
+}
+
+.hp-bar {
+    height: 100%;
+    background: var(--success);
+    transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-right: 3px solid rgba(0, 0, 0, 0.3);
+}
+
+.player-hp {
+    background: var(--success);
+}
+
+.enemy-hp {
+    background: var(--accent);
+    /* Enemy is red usually */
+}
+
+.hp-text {
+    font-size: 0.85rem;
+    color: #000;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    text-shadow: 1px 1px 0px #fff;
+}
+
+.battle-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.vs-badge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 3rem;
+    color: #000;
+    text-shadow: 3px 3px 0px #FFD600;
+    transform: rotate(-10deg);
+    -webkit-text-stroke: 1px #000;
+}
+
+.battle-stats {
+    display: flex;
+    gap: 16px;
+}
+
+.coins-display {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #FFD600;
+    color: #000;
+    padding: 6px 14px;
+    font-weight: 900;
+    font-size: 0.85rem;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0 #000;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.battle-cry {
+    position: absolute;
+    top: -60px;
+    right: 10px;
+    background: #fff;
+    padding: 12px 18px;
+    border-radius: 20px;
+    border-bottom-right-radius: 0;
+    font-style: italic;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #000;
+    border: 4px solid #000;
+    box-shadow: 6px 6px 0px #000;
+    white-space: nowrap;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.battle-cry::after {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    right: 10px;
+    border-width: 10px 10px 0 0;
+    border-style: solid;
+    border-color: #000 transparent transparent transparent;
+}
+
+.combat-float {
+    position: absolute;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 100;
+    padding: 8px 16px;
+    border: 4px solid #000;
+    border-radius: 50px;
+    text-transform: uppercase;
+}
+
+.combat-float.damage {
+    color: #000;
+    background: #EF4444;
+    font-size: 1.8rem;
+    left: 50%;
+    top: 10px;
+    box-shadow: 5px 5px 0 #000;
+    transform: rotate(-12deg);
+    color: #fff;
+}
+
+.combat-float.attack {
+    color: #000;
+    background: #FFD600;
+    font-size: 2.2rem;
+    white-space: nowrap;
+    top: -20px;
+    box-shadow: 5px 5px 0 #000;
+    transform: rotate(12deg);
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) scale(0.8) rotate(var(--rot, 15deg));
+        opacity: 0;
+    }
+
+    20% {
+        transform: translateY(-10px) scale(1.2) rotate(var(--rot, 15deg));
+        opacity: 1;
+    }
+
+    80% {
+        transform: translateY(-30px) scale(1) rotate(var(--rot, 15deg));
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-40px) scale(1) rotate(var(--rot, 15deg));
+        opacity: 0;
+    }
+}
+
+.animate-floatUp {
+    animation: floatUp 1s ease-out forwards;
+}
+
+/* Make bottom section fill the rest */
+.v3-bottom {
+    flex: 1;
+}
+
+/* FLOATING DAMAGE NUMBERS */
+.floating-dmg {
+    position: absolute;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 900;
+    font-size: 2.5rem;
+    z-index: 1000;
+    text-shadow: 4px 4px 0px #000;
+    pointer-events: none;
+    -webkit-text-stroke: 2px #000;
+}
+
+.floating-dmg.enemy {
+    color: var(--hard);
+    right: 15%;
+    top: 40%;
+}
+
+.floating-dmg.player {
+    color: var(--success);
+    left: 15%;
+    top: 40%;
+}
+
+@media (max-width: 1024px) {
+    .floating-dmg {
+        font-size: 1.8rem;
+    }
+}
