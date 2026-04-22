@@ -136,8 +136,8 @@ function TopicDetail({ regionId, expandedState, setExpandedState, navigate, prog
                   {complete
                     ? <CheckCircle2 size={16} color="var(--success)" />
                     : locked
-                      ? <Lock size={14} color="var(--text-muted)" />
-                      : <Circle size={14} color="var(--text-muted)" />
+                    ? <Lock size={14} color="var(--text-muted)" />
+                    : <Circle size={14} color="var(--text-muted)" />
                   }
                   <span className="state-acc-name">{state.name}</span>
                   <span className="state-acc-label">— {state.label}</span>

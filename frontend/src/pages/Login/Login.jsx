@@ -28,11 +28,11 @@ export default function Login() {
       fontFamily: "'Space Grotesk', sans-serif",
     },
     elements: {
-      card: { boxShadow: 'none', background: 'transparent', padding: 0 },
-      headerTitle: { display: 'none' },
-      headerSubtitle: { display: 'none' },
-      logoBox: { display: 'none' },
-      footer: { display: 'none' },
+      card:              { boxShadow: 'none', background: 'transparent', padding: 0 },
+      headerTitle:       { display: 'none' },
+      headerSubtitle:    { display: 'none' },
+      logoBox:           { display: 'none' },
+      footer:            { display: 'none' },
       formFieldInput: {
         border: '3px solid #000',
         borderRadius: '0px',
@@ -67,8 +67,8 @@ export default function Login() {
         fontFamily: "'Space Grotesk', sans-serif",
       },
       socialButtonsBlockButtonText: { fontWeight: '900', color: '#000000' },
-      dividerLine: { background: '#000000', height: '2px' },
-      dividerText: { color: '#000000', fontWeight: '900', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.1em' },
+      dividerLine:  { background: '#000000', height: '2px' },
+      dividerText:  { color: '#000000', fontWeight: '900', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.1em' },
       formFieldLabel: { color: '#000000', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: '0.7rem' },
       formFieldAction: { color: '#000000', fontWeight: '700', textDecoration: 'underline' },
       identityPreviewText: { color: '#000000', fontWeight: '900' },
@@ -77,9 +77,9 @@ export default function Login() {
   };
 
   const FEATURES = [
-    { icon: Swords, label: 'PvP Arena', desc: 'Duel coders live, 1v1 or 2v2' },
-    { icon: Trophy, label: 'Leaderboards', desc: 'Climb global ranks & earn coins' },
-    { icon: Star, label: 'World Map', desc: 'Conquer DSA regions like a game' },
+    { icon: Swords, label: 'PvP Arena',     desc: 'Duel coders live, 1v1 or 2v2' },
+    { icon: Trophy, label: 'Leaderboards',  desc: 'Climb global ranks & earn coins' },
+    { icon: Star,   label: 'World Map',     desc: 'Conquer DSA regions like a game' },
   ];
 
   return (
@@ -91,8 +91,8 @@ export default function Login() {
 
         <div className="login-brand">
           <img src="/CodoLvling.webp" alt="Codo Leveling" className="login-logo" />
-          <h1 className="login-brand-title">CODO<br />LVLING</h1>
-          <p className="login-brand-sub">Learn DSA by defeating enemies,<br />climbing ranks, and grinding XP.</p>
+          <h1 className="login-brand-title">CODO<br/>LVLING</h1>
+          <p className="login-brand-sub">Learn DSA by defeating enemies,<br/>climbing ranks, and grinding XP.</p>
         </div>
 
         <div className="login-features">

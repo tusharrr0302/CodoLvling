@@ -1,125 +1,167 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useUser } from '@clerk/clerk-react';
+import { useProgress } from './ProgressContext';
 
 const MultiplayerContext = createContext(null);
+const SOCKET_URL = 'http://localhost:3000';
 
-export const MultiplayerProvider = ({ children }) => {
+export function MultiplayerProvider({ children }) {
   const { user } = useUser();
-  const [socket, setSocket] = useState(null);
-  const [room, setRoom] = useState(null);
-  const [myTeam, setMyTeam] = useState(null);
+  const { progress } = useProgress();
+  const socketRef = useRef(null);
+
+  const [status, setStatus] = useState('idle'); // idle | searching | found | active | ended
+  const [mode, setMode] = useState(null);       // 'duo' | '2v2'
+  const [room, setRoom] = useState(null);        // full room payload from server
+  const [myTeam, setMyTeam] = useState(null);   // 'A' | 'B'
+  const [queueSize, setQueueSize] = useState(0);
+
+  // Battle state (live-updated via events)
   const [teamHP, setTeamHP] = useState({ A: 1000, B: 1000 });
   const [bossHP, setBossHP] = useState(1000);
-  const [submissions, setSubmissions] = useState([]);
-  const [comboEvent, setComboEvent] = useState(null);
-  const [typingUsers, setTypingUsers] = useState({});
-  const [matchResult, setMatchResult] = useState(null);
+  const [submissions, setSubmissions] = useState([]); // list of { userId, team, damage, correctness }
+  const [comboEvent, setComboEvent] = useState(null);  // { team, bonusDamage } — cleared after anim
+  const [typingUsers, setTypingUsers] = useState({});   // { userId: true/false }
+  const [matchResult, setMatchResult] = useState(null); // { winner, loot }
   const [rateLimited, setRateLimited] = useState(null);
-  const [isSearching, setIsSearching] = useState(false);
 
-  // Voice States (Simplified, usually managed by useVoiceChat hook)
-  const [voiceMuted, setVoiceMuted] = useState(true);
+  // Voice state (mute map, speaking map)
+  const [voiceMuted, setVoiceMuted] = useState({});
   const [voiceSpeaking, setVoiceSpeaking] = useState({});
 
+  // ── Socket lifecycle ──────────────────────────────────────────────────────
   useEffect(() => {
-    if (user) {
-      const newSocket = io('http://localhost:5000');
-      setSocket(newSocket);
+    const socket = io(SOCKET_URL, { autoConnect: false });
+    socketRef.current = socket;
+    socket.connect();
 
-      newSocket.on('room_update', (roomData) => {
-        setRoom(roomData);
-        // Determine my team
-        const teamA = roomData.teams?.A || [];
-        const teamB = roomData.teams?.B || [];
-        if (teamA.find(p => p.userId === user.id)) setMyTeam('A');
-        else if (teamB.find(p => p.userId === user.id)) setMyTeam('B');
-      });
+    socket.on('mp:waiting', (data) => {
+      setStatus('searching');
+    });
 
-      newSocket.on('battle_update', (data) => {
-        if (data.teamHP) setTeamHP(data.teamHP);
-        if (data.bossHP) setBossHP(data.bossHP);
-        if (data.submissions) setSubmissions(data.submissions);
-      });
+    socket.on('mp:queue_update', ({ queueSize }) => {
+      setQueueSize(queueSize);
+    });
 
-      newSocket.on('combo_event', (event) => {
-        setComboEvent(event);
-        setTimeout(() => setComboEvent(null), 3000);
-      });
+    socket.on('mp:match_found', (data) => {
+      setRoom(data);
+      setMyTeam(data.myTeam);
+      setStatus('found');
+      if (data.teamHP) setTeamHP(data.teamHP);
+      if (data.bossHP !== undefined) setBossHP(data.bossHP);
+      setTimeout(() => setStatus('active'), 2500); // brief countdown before arena
+    });
 
-      newSocket.on('typing_update', ({ userId, isTyping }) => {
-        setTypingUsers(prev => ({ ...prev, [userId]: isTyping }));
-      });
+    socket.on('mp:submission_result', (result) => {
+      setSubmissions(prev => [...prev, result]);
+    });
 
-      newSocket.on('match_finished', (result) => {
-        setMatchResult(result);
-      });
+    socket.on('mp:hp_update', ({ teamHP: newTeamHP, bossHP: newBossHP }) => {
+      if (newTeamHP) setTeamHP(newTeamHP);
+      if (newBossHP !== undefined) setBossHP(newBossHP);
+    });
 
-      newSocket.on('rate_limit', ({ retryAfter }) => {
-        setRateLimited(retryAfter);
-        const timer = setInterval(() => {
-          setRateLimited(prev => {
-            if (prev <= 1) {
-              clearInterval(timer);
-              return null;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      });
+    socket.on('mp:team_combo', (data) => {
+      setComboEvent(data);
+      setTimeout(() => setComboEvent(null), 2500);
+    });
 
-      return () => newSocket.close();
-    }
-  }, [user]);
+    socket.on('mp:typing', ({ userId, isTyping }) => {
+      setTypingUsers(prev => ({ ...prev, [userId]: isTyping }));
+    });
 
-  const joinRoom = (roomId) => {
-    if (socket && user) {
-      socket.emit('join_room', { roomId, user: { id: user.id, username: user.username || user.firstName } });
-    }
+    socket.on('mp:match_end', (result) => {
+      setMatchResult(result);
+      setStatus('ended');
+    });
+
+    socket.on('mp:player_disconnected', ({ username }) => {
+      setMatchResult({ disconnected: true, username });
+      setStatus('ended');
+    });
+
+    socket.on('mp:search_cancelled', () => {
+      setStatus('idle');
+      setQueueSize(0);
+    });
+
+    socket.on('mp:rate_limited', ({ message }) => {
+      setRateLimited(message);
+      setTimeout(() => setRateLimited(null), 3000);
+    });
+
+    // Voice relay events — forwarded by useVoiceChat hook via context
+    // (just expose socket ref; hook handles the WebRTC logic directly)
+
+    socket.on('voice:mute', ({ userId, isMuted }) => {
+      setVoiceMuted(prev => ({ ...prev, [userId]: isMuted }));
+    });
+
+    socket.on('voice:speaking', ({ userId, isSpeaking }) => {
+      setVoiceSpeaking(prev => ({ ...prev, [userId]: isSpeaking }));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+  const findMatch = (selectedMode) => {
+    const socket = socketRef.current;
+    if (!socket || !user) return;
+    setMode(selectedMode);
+    setStatus('searching');
+    setSubmissions([]);
+    setMatchResult(null);
+    setComboEvent(null);
+    socket.emit('mp:find_match', {
+      mode: selectedMode,
+      userId: user.id,
+      username: user.username || user.fullName || 'Hunter',
+      level: progress?.level || 1,
+    });
   };
 
-  const submitCode = (roomId, results) => {
-    if (socket) {
-      socket.emit('submit_code', { roomId, results });
-    }
+  const cancelSearch = () => {
+    socketRef.current?.emit('mp:cancel_search');
+    setStatus('idle');
+    setMode(null);
+    setQueueSize(0);
+  };
+
+  const submitCode = (roomId, testResults) => {
+    socketRef.current?.emit('mp:code_submit', {
+      roomId,
+      userId: user?.id,
+      testResults,
+    });
   };
 
   const sendTyping = (roomId, isTyping) => {
-    if (socket) {
-      socket.emit('typing', { roomId, isTyping });
-    }
+    socketRef.current?.emit('mp:typing', { roomId, userId: user?.id, isTyping });
+  };
+
+  const sendVoiceMute = (roomId, isMuted) => {
+    socketRef.current?.emit('voice:mute', { roomId, userId: user?.id, isMuted });
   };
 
   return (
-    <MultiplayerContext.Provider value={{ 
-      socket, 
-      room, 
-      myTeam,
-      teamHP,
-      bossHP,
-      submissions,
-      comboEvent,
-      typingUsers,
-      matchResult,
-      rateLimited,
-      isSearching,
-      setIsSearching,
-      joinRoom,
-      submitCode,
-      sendTyping,
-      voiceMuted,
-      setVoiceMuted,
-      voiceSpeaking
+    <MultiplayerContext.Provider value={{
+      socket: socketRef.current,
+      status, mode, room, myTeam, queueSize,
+      teamHP, bossHP, submissions, comboEvent, typingUsers, matchResult, rateLimited,
+      voiceMuted, voiceSpeaking,
+      findMatch, cancelSearch, submitCode, sendTyping, sendVoiceMute,
     }}>
       {children}
     </MultiplayerContext.Provider>
   );
-};
+}
 
 export const useMultiplayer = () => {
-  const context = useContext(MultiplayerContext);
-  if (!context) {
-    throw new Error('useMultiplayer must be used within a MultiplayerProvider');
-  }
-  return context;
+  const ctx = useContext(MultiplayerContext);
+  if (!ctx) throw new Error('useMultiplayer must be used within MultiplayerProvider');
+  return ctx;
 };

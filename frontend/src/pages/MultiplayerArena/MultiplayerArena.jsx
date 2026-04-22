@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser } from '@clerk/clerk-react';
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
@@ -19,7 +19,6 @@ import './MultiplayerArena.css';
 
 export default function MultiplayerArena() {
   const { user } = useUser();
-  const { getToken } = useAuth();
   const navigate = useNavigate();
   const { socket, room, myTeam, teamHP, bossHP, submissions, comboEvent, typingUsers, matchResult, rateLimited, submitCode, sendTyping, voiceMuted, voiceSpeaking } = useMultiplayer();
 
@@ -77,8 +76,7 @@ export default function MultiplayerArena() {
     setIsRunning(true);
     setRunResults(null);
     try {
-      const token = await getToken();
-      const results = await runCode(code, selectedLang, problem.testCases, token);
+      const results = await runCode(code, selectedLang, problem.testCases, user?.token);
       setRunResults(results);
     } catch (err) {
       setRunResults([{ error: err.message }]);
@@ -89,8 +87,7 @@ export default function MultiplayerArena() {
     if (!problem || submitted) return;
     setIsSubmitting(true);
     try {
-      const token = await getToken();
-      const results = await runCode(code, selectedLang, problem.testCases, token);
+      const results = await runCode(code, selectedLang, problem.testCases, user?.token);
       setRunResults(results);
       setSubmitted(true);
       submitCode(roomId, results);
@@ -101,10 +98,10 @@ export default function MultiplayerArena() {
   const getLangExtension = () => {
     switch (selectedLang) {
       case 'python': return [python()];
-      case 'java': return [java()];
-      case 'cpp': return [cpp()];
-      case 'c': return [cpp()]; // C uses cpp highlighter
-      default: return [javascript()];
+      case 'java':   return [java()];
+      case 'cpp':    return [cpp()];
+      case 'c':      return [cpp()]; // C uses cpp highlighter
+      default:       return [javascript()];
     }
   };
 

@@ -1,50 +1,100 @@
-import React from 'react';
-import { Mic, MicOff, AlertCircle } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Mic, MicOff, Volume2 } from 'lucide-react';
+import './VoicePanel.css';
 
-export default function VoicePanel({ players, myUserId, isMuted, toggleMute, speakingStates, voiceMuted, voiceEnabled, voiceError, startVoice, remoteStreams }) {
+/**
+ * VoicePanel — Shows all players in the room with mic status and speaking indicator.
+ */
+export default function VoicePanel({
+  players,          // [{ userId, username, team }]
+  myUserId,
+  isMuted,
+  toggleMute,
+  speakingStates,   // { userId: bool }
+  voiceMuted,       // { userId: bool } from server
+  voiceEnabled,
+  voiceError,
+  startVoice,
+  remoteStreams,    // { userId: MediaStream }
+}) {
+  const audioRefs = useRef({});
+
+  // Auto-play remote streams
+  useEffect(() => {
+    Object.entries(remoteStreams || {}).forEach(([userId, stream]) => {
+      const el = audioRefs.current[userId];
+      if (el && el.srcObject !== stream) {
+        el.srcObject = stream;
+        el.play().catch(() => {});
+      }
+    });
+  }, [remoteStreams]);
+
   return (
-    <div className="voice-panel bg-white neo-border p-4 fixed bottom-8 left-8 neo-shadow-sm flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-8">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-full ${voiceEnabled ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
-            {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
-          </div>
-          <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Voice Channel</div>
-            <div className="text-xs font-black uppercase">{voiceEnabled ? 'Connected' : 'Disconnected'}</div>
-          </div>
-        </div>
-        
-        {!voiceEnabled ? (
-          <button className="neo-btn btn-sm" onClick={startVoice}>Join Voice</button>
-        ) : (
-          <button className={`neo-btn btn-sm ${isMuted ? 'bg-red-500 text-white' : ''}`} onClick={toggleMute}>
-            {isMuted ? 'Unmute' : 'Mute'}
+    <div className="voice-panel">
+      {/* Hidden audio elements for remote streams */}
+      {Object.keys(remoteStreams || {}).map(userId => (
+        <audio
+          key={userId}
+          ref={el => { audioRefs.current[userId] = el; }}
+          autoPlay
+          playsInline
+        />
+      ))}
+
+      <div className="voice-panel-header">
+        <Volume2 size={14} />
+        <span>VOICE COMM</span>
+        {!voiceEnabled && !voiceError && (
+          <button className="voice-join-btn" onClick={startVoice}>
+            Join Voice
           </button>
+        )}
+        {voiceError && (
+          <span className="voice-error-badge">No Mic</span>
         )}
       </div>
 
-      {voiceError && (
-        <div className="flex items-center gap-2 text-red-500 text-[10px] font-bold uppercase">
-          <AlertCircle size={12} />
-          {voiceError}
-        </div>
-      )}
+      <div className="voice-players">
+        {(players || []).map(player => {
+          const isSpeaking = speakingStates?.[player.userId] && !voiceMuted?.[player.userId];
+          const isServerMuted = voiceMuted?.[player.userId];
+          const isMe = player.userId === myUserId;
+          const myMuted = isMe && isMuted;
 
-      <div className="voice-participants flex gap-2">
-        {players.map(p => (
-          <div 
-            key={p.userId} 
-            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black
-              ${speakingStates[p.userId] ? 'border-emerald-500 scale-110' : 'border-black'}
-              ${p.userId === myUserId ? 'bg-yellow-400' : 'bg-white'}
-            `}
-            title={p.username}
-          >
-            {p.username?.[0].toUpperCase() || '?'}
-          </div>
-        ))}
+          return (
+            <div
+              key={player.userId}
+              className={`voice-player ${isSpeaking ? 'speaking' : ''} ${player.team === 'A' ? 'team-a' : 'team-b'}`}
+            >
+              <div className={`voice-avatar ${isSpeaking ? 'pulse' : ''}`}>
+                {(player.username || 'P')[0].toUpperCase()}
+              </div>
+              <div className="voice-player-info">
+                <span className="voice-username">
+                  {isMe ? 'YOU' : player.username}
+                </span>
+                <span className="voice-team-badge">{player.team}</span>
+              </div>
+              <div className="voice-mic-icon">
+                {(myMuted || isServerMuted)
+                  ? <MicOff size={14} className="text-red-400" />
+                  : <Mic size={14} className={isSpeaking ? 'text-green-400' : 'text-gray-400'} />
+                }
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {voiceEnabled && (
+        <button
+          className={`voice-mute-btn ${isMuted ? 'muted' : ''}`}
+          onClick={toggleMute}
+        >
+          {isMuted ? <><MicOff size={14} /> Unmute</> : <><Mic size={14} /> Mute</>}
+        </button>
+      )}
     </div>
   );
 }

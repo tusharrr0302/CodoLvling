@@ -1,133 +1,174 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, User, Zap, Swords, Mic, Shield, ChevronRight } from 'lucide-react';
-import { useMultiplayer } from '../../context/MultiplayerContext';
-import { useUser } from '@clerk/clerk-react';
-import PageHeader from '../../components/UI/PageHeader';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Users, Swords, Zap, Activity } from 'lucide-react';
+import { useMultiplayer } from '../../context/MultiplayerContext';
+import { useProgress } from '../../context/ProgressContext';
+import { useUser } from '@clerk/clerk-react';
 import './BattleLobby.css';
 
-const MODES = [
+const MODE_CARDS = [
   {
     id: '1v1',
-    name: 'DUEL (1v1)',
-    description: 'Classic head-to-head logic battle. First to solve or most damage wins.',
-    icon: <User size={24} />,
-    color: '#3B82F6',
-    comingSoon: false
+    icon: Swords,
+    title: '1v1 DUEL',
+    subtitle: 'SOLO VS SOLO',
+    description: 'One hunter vs one hunter. Pure individual skill — first to drain the opponent\'s 500 HP wins the duel.',
+    color: '#ef4444',
+    shadow: '#7f1d1d',
+    players: '2 PLAYERS',
+    badge: 'DUEL',
+  },
+  {
+    id: 'duo',
+    icon: Users,
+    title: 'DUO MODE',
+    subtitle: 'CO-OP',
+    description: 'Team up with one other hunter. Both solve the same problem together and combine damage to defeat the shared boss.',
+    color: '#FAFF00',
+    shadow: '#f59e0b',
+    players: '2 PLAYERS',
+    badge: 'CO-OP',
   },
   {
     id: '2v2',
-    name: 'SQUAD (2v2)',
-    description: 'Team up with a partner. Shared HP and coordinated attacks.',
-    icon: <Users size={24} />,
-    color: '#10B981',
-    comingSoon: true
+    icon: Users,
+    title: '2v2 BATTLE',
+    subtitle: 'TEAM VS TEAM',
+    description: 'Two hunters vs two hunters. Each team attacks the other\'s HP. First team to zero wins. Sync your submissions for a TEAM COMBO bonus.',
+    color: '#f97316',
+    shadow: '#b91c1c',
+    players: '4 PLAYERS',
+    badge: 'VERSUS',
   },
-  {
-    id: '2vQ',
-    name: 'CO-OP (2 vs Q)',
-    description: 'Two players collaborate to take down a legendary difficulty enemy.',
-    icon: <Swords size={24} />,
-    color: '#F59E0B',
-    comingSoon: true
-  }
 ];
 
 export default function BattleLobby() {
   const navigate = useNavigate();
+  const { progress } = useProgress();
   const { user } = useUser();
-  const { joinRoom, isSearching, setIsSearching, room } = useMultiplayer();
-  const [selectedMode, setSelectedMode] = useState('1v1');
+  const { status, mode, room, queueSize, findMatch, cancelSearch } = useMultiplayer();
 
-  const startMatchmaking = () => {
-    setIsSearching(true);
-    // In a real app, we'd emit a matchmaking event. 
-    // For this demo, we'll just join a fixed "Global Arena" room
-    setTimeout(() => {
-      joinRoom('arena-global-1');
-    }, 2000);
-  };
-
-  if (room && room.players.length >= 2) {
-    // Navigate to Multiplayer Arena when match is found
-    navigate('/multiplayer-arena');
-  }
+  // Navigate to arena when match is active
+  useEffect(() => {
+    if (status === 'active' && room) {
+      navigate('/battle/' + room.roomId, { state: { room } });
+    }
+  }, [status, room, navigate]);
 
   return (
-    <div className="page lobby-page animate-fadeIn">
-      <PageHeader 
-        title="BATTLE ARENA" 
-        description="Enter the competitive grounds. Face other Coders in real-time logic combat."
-      />
+    <div className="battle-lobby-page">
+      <div className="lobby-bg-pattern" />
 
-      <div className="container py-12">
-        {!isSearching ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {MODES.map((mode) => (
-              <motion.div 
-                key={mode.id}
-                className={`mode-card bg-white neo-border neo-shadow transition-all ${selectedMode === mode.id ? 'active' : ''} ${mode.comingSoon ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-                onClick={() => !mode.comingSoon && setSelectedMode(mode.id)}
-                whileHover={!mode.comingSoon ? { y: -5 } : {}}
+      <div className="lobby-content">
+        {/* Header */}
+        <div className="lobby-header">
+          <div className="lobby-tag"><Zap size={14} fill="currentColor" /> MULTIPLAYER</div>
+          <h1 className="lobby-title">THE<br />PROVING<br />GROUNDS</h1>
+          <p className="lobby-subtitle">Engage in real-time logic combat. Winners claim glory and coins.</p>
+          <div className="lobby-player-badge">
+            <div className="lobby-player-avatar">{(user?.username || 'P')[0].toUpperCase()}</div>
+            <div>
+              <div className="lobby-player-name">{user?.username || user?.fullName || 'Hunter'}</div>
+              <div className="lobby-player-level">LVL {progress?.level || 1} — READY TO FIGHT</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mode Cards or Matchmaking State */}
+        <div className="lobby-right">
+          <AnimatePresence mode="wait">
+            {status === 'idle' && (
+              <motion.div
+                key="mode-select"
+                className="mode-cards"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
               >
-                <div className="mode-icon-wrap" style={{ backgroundColor: `${mode.color}20` }}>
-                  {mode.icon}
-                </div>
-                <h3 className="text-xl font-black mt-4">{mode.name}</h3>
-                <p className="text-sm text-gray-500 mt-2 font-medium">{mode.description}</p>
-                {mode.comingSoon && <span className="coming-soon-badge">COMING SOON</span>}
+                {MODE_CARDS.map((card, i) => (
+                  <motion.button
+                    key={card.id}
+                    className="mode-card"
+                    style={{ '--card-color': card.color, '--card-shadow': card.shadow }}
+                    onClick={() => findMatch(card.id)}
+                    initial={{ opacity: 0, x: 40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    whileHover={{ y: -4 }}
+                  >
+                    <div className="mode-card-badge">{card.badge}</div>
+                    <div className="mode-card-icon">
+                      <card.icon size={36} />
+                    </div>
+                    <div className="mode-card-body">
+                      <div className="mode-card-players">{card.players}</div>
+                      <div className="mode-card-title">{card.title}</div>
+                      <div className="mode-card-subtitle">{card.subtitle}</div>
+                      <p className="mode-card-desc">{card.description}</p>
+                    </div>
+                    <div className="mode-card-cta">ENTER QUEUE →</div>
+                  </motion.button>
+                ))}
               </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div className="matchmaking-status flex flex-col items-center justify-center py-20">
-            <div className="search-loader">
-              <div className="loader-ring"></div>
-              <Swords size={48} className="loader-icon" />
-            </div>
-            <h2 className="text-3xl font-black mt-8 uppercase tracking-tighter">Searching for Opponent...</h2>
-            <p className="text-gray-500 mt-2 font-bold uppercase tracking-widest">Global Arena | {selectedMode}</p>
-            
-            <div className="mt-12 flex flex-col items-center gap-4">
-               <div className="flex -space-x-4">
-                  <div className="w-12 h-12 rounded-full bg-blue-500 border-4 border-white flex items-center justify-center font-black text-white">
-                    {user?.username?.[0].toUpperCase()}
-                  </div>
-                  <div className="w-12 h-12 rounded-full bg-gray-200 border-4 border-white border-dashed animate-pulse"></div>
-               </div>
-               <button className="neo-btn btn-sm mt-4" onClick={() => setIsSearching(false)}>CANCEL</button>
-            </div>
-          </div>
-        )}
+            )}
 
-        {!isSearching && (
-          <div className="mt-12 flex justify-center">
-            <button 
-              className="neo-btn px-20 py-4 bg-black text-white text-2xl font-black hover:bg-gray-800 transition-all flex items-center gap-4"
-              onClick={startMatchmaking}
-            >
-              FIND MATCH <ChevronRight size={28} />
-            </button>
-          </div>
-        )}
+            {status === 'searching' && (
+              <motion.div
+                key="searching"
+                className="matchmaking-state"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="mm-icon-ring">
+                  <Activity size={40} className="mm-spinner" />
+                </div>
+                <div className="mm-title">
+                  {mode === '1v1' ? 'FINDING OPPONENT' : mode === 'duo' ? 'FINDING CO-OP PARTNER' : 'ASSEMBLING TEAMS'}
+                </div>
+                <div className="mm-players-preview">
+                  {[...Array(mode === '2v2' ? 4 : 2)].map((_, i) => (
+                    <div
+                      key={i}
+                      className={`mm-player-slot ${i === 0 ? 'filled' : i < (queueSize) ? 'filled' : 'empty'}`}
+                    >
+                      {i === 0 ? (user?.username || 'P')[0].toUpperCase() : i < queueSize ? '?' : '+'}
+                    </div>
+                  ))}
+                </div>
+                <div className="mm-count">
+                  {queueSize}/{mode === '2v2' ? 4 : 2} PLAYERS IN QUEUE
+                </div>
+                <button className="mp-btn mp-btn-ghost cancel-btn" onClick={cancelSearch}>
+                  Cancel Search
+                </button>
+              </motion.div>
+            )}
 
-        <div className="arena-features mt-24 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-           <div className="feature">
-              <Mic size={32} className="mx-auto mb-4 text-blue-500" />
-              <h4 className="font-black uppercase">Live Voice Chat</h4>
-              <p className="text-sm text-gray-500 font-medium">Coordinate with teammates or banter with rivals in real-time.</p>
-           </div>
-           <div className="feature">
-              <Zap size={32} className="mx-auto mb-4 text-yellow-500" />
-              <h4 className="font-black uppercase">Instant Feedback</h4>
-              <p className="text-sm text-gray-500 font-medium">Every correct line of code deals damage. Efficiency is your weapon.</p>
-           </div>
-           <div className="feature">
-              <Shield size={32} className="mx-auto mb-4 text-emerald-500" />
-              <h4 className="font-black uppercase">Ranked Play</h4>
-              <p className="text-sm text-gray-500 font-medium">Climb the global leaderboard and earn legendary artifact skins.</p>
-           </div>
+            {status === 'found' && (
+              <motion.div
+                key="found"
+                className="matchmaking-state found"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              >
+                <div className="mm-found-badge">⚡ MATCH FOUND</div>
+                <div className="mm-title">PREPARING ARENA</div>
+                <p className="mm-subtitle">Establishing secure connection...</p>
+                <div className="mm-loading-bar">
+                  <motion.div
+                    className="mm-loading-fill"
+                    initial={{ width: '0%' }}
+                    animate={{ width: '100%' }}
+                    transition={{ duration: 2, ease: 'easeInOut' }}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

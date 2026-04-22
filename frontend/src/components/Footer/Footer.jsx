@@ -26,20 +26,20 @@ export default function Footer() {
           <div className="footer-col">
             <h4>Platform</h4>
             <div className="footer-links">
-              <Link to="/map"><Map size={14} /> World Map</Link>
-              <Link to="/logic-lab"><FlaskConical size={14} /> Logic Lab</Link>
-              <Link to="/pvp"><Swords size={14} /> Arena</Link>
-              <Link to="/shop"><ShoppingCart size={14} /> Item Shop</Link>
-              <Link to="/docs"><BookOpen size={14} /> Codex</Link>
+               <Link to="/map"><Map size={14} /> World Map</Link>
+               <Link to="/logic-lab"><FlaskConical size={14} /> Logic Lab</Link>
+               <Link to="/pvp"><Swords size={14} /> Arena</Link>
+               <Link to="/shop"><ShoppingCart size={14} /> Item Shop</Link>
+               <Link to="/docs"><BookOpen size={14} /> Codex</Link>
             </div>
           </div>
 
           <div className="footer-col">
             <h4>Support</h4>
             <div className="footer-links">
-              <a href="#">Help Center</a>
-              <a href="#">Community</a>
-              <a href="#">Feedback</a>
+               <a href="#">Help Center</a>
+               <a href="#">Community</a>
+               <a href="#">Feedback</a>
             </div>
           </div>
         </div>

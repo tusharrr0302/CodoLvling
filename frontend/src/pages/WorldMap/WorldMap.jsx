@@ -26,8 +26,8 @@ export default function WorldMap() {
       {/* Background grid */}
       <div className="worldmap-grid" />
 
-      <PageHeader
-        title="THE SEQUENTIAL GATES"
+      <PageHeader 
+        title="THE SEQUENTIAL GATES" 
         description="Select a region to begin practice. Complete all states to unlock the next region."
       />
 

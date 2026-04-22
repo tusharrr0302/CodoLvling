@@ -9,11 +9,11 @@ export default function Codex() {
   const { progress } = useProgress();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('enemies');
-
+  
   // Track which enemies we've seen by evaluating solved regions/difficulties
   // For V3 mock, we'll mark the easy enemies of unlocked regions as 'seen'
   // and mark them 'defeated' if the region has any solves.
-
+  
   const allEnemies = Object.values(ENEMIES);
 
   // A helper to guess if enemy was defeated (simplified for mock prototype)
@@ -30,10 +30,10 @@ export default function Codex() {
   return (
     <div className="page codex-page">
       <div className="codex-header">
-        <div className="codex-header-content">
-          <h1>The Discovery Codex</h1>
-          <p>Your archive of enemies slain and knowledge attained.</p>
-        </div>
+         <div className="codex-header-content">
+            <h1>The Discovery Codex</h1>
+            <p>Your archive of enemies slain and knowledge attained.</p>
+         </div>
       </div>
 
       <div className="container">
@@ -82,18 +82,18 @@ export default function Codex() {
           {activeTab === 'lore' && (
             <div className="lore-archive">
               <div className="lore-entry unlocked">
-                <h3>Fragment #001: The Descent</h3>
-                <p>"The Abyss consists of an endless hierarchy of logic and problems. Those who conquer its depths command the laws of computation."</p>
+                 <h3>Fragment #001: The Descent</h3>
+                 <p>"The Abyss consists of an endless hierarchy of logic and problems. Those who conquer its depths command the laws of computation."</p>
               </div>
               {progress.level >= 5 ? (
                 <div className="lore-entry unlocked">
-                  <h3>Fragment #002: The Arrays</h3>
-                  <p>"The Goblin hoarders structured their realm in contiguous blocks. To defeat them requires sequential understanding..."</p>
+                   <h3>Fragment #002: The Arrays</h3>
+                   <p>"The Goblin hoarders structured their realm in contiguous blocks. To defeat them requires sequential understanding..."</p>
                 </div>
               ) : (
                 <div className="lore-entry locked">
-                  <h3>Fragment #002: ???</h3>
-                  <p>Reach Level 5 to unlock this lore fragment.</p>
+                   <h3>Fragment #002: ???</h3>
+                   <p>Reach Level 5 to unlock this lore fragment.</p>
                 </div>
               )}
             </div>
@@ -123,20 +123,20 @@ export default function Codex() {
           {activeTab === 'stats' && (
             <div className="stats-dashboard">
               <div className="stat-card">
-                <div className="stat-label">Coder Level</div>
-                <div className="stat-value">{progress.level}</div>
+                 <div className="stat-label">Coder Level</div>
+                 <div className="stat-value">{progress.level}</div>
               </div>
               <div className="stat-card">
-                <div className="stat-label">Total XP</div>
-                <div className="stat-value">{progress.xp}</div>
+                 <div className="stat-label">Total XP</div>
+                 <div className="stat-value">{progress.xp}</div>
               </div>
               <div className="stat-card">
-                <div className="stat-label">Coins Hoarded</div>
-                <div className="stat-value" style={{ color: '#FACC15' }}>{progress.coins}</div>
+                 <div className="stat-label">Coins Hoarded</div>
+                 <div className="stat-value" style={{ color: '#FACC15' }}>{progress.coins}</div>
               </div>
               <div className="stat-card">
-                <div className="stat-label">Problems Solved</div>
-                <div className="stat-value">{Object.keys(progress.solvedProblems).length}</div>
+                 <div className="stat-label">Problems Solved</div>
+                 <div className="stat-value">{Object.keys(progress.solvedProblems).length}</div>
               </div>
             </div>
           )}

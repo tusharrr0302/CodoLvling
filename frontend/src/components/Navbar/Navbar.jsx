@@ -5,11 +5,11 @@ import { useProgress } from '../../context/ProgressContext';
 import './Navbar.css';
 
 const NAV_ITEMS = [
-  { path: '/', label: 'Home', icon: Zap },
-  { path: '/map', label: 'World Map', icon: Map },
-  { path: '/pvp', label: 'Arena', icon: Swords },
-  { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-  { path: '/shop', label: 'Shop', icon: ShoppingCart },
+  { path: '/',             label: 'Home',        icon: Zap },
+  { path: '/map',          label: 'World Map',   icon: Map },
+  { path: '/pvp',          label: 'Arena',       icon: Swords },
+  { path: '/leaderboard',  label: 'Leaderboard', icon: Trophy },
+  { path: '/shop',         label: 'Shop',        icon: ShoppingCart },
 ];
 
 export default function Navbar() {
@@ -27,10 +27,10 @@ export default function Navbar() {
         <SignedIn>
           <nav className="navbar-nav">
             {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-              const isActive = path === '/'
-                ? location.pathname === '/'
+              const isActive = path === '/' 
+                ? location.pathname === '/' 
                 : location.pathname.startsWith(path);
-
+                
               return (
                 <Link
                   key={path}
@@ -55,14 +55,14 @@ export default function Navbar() {
                 <span>LVL {progress.level || 1}</span>
               </div>
             </div>
-
+            
             <div className="user-control">
               <UserButton afterSignOutUrl="/">
                 <UserButton.MenuItems>
-                  <UserButton.Link
-                    label="Dashboard"
-                    labelIcon={<LayoutDashboard size={16} />}
-                    href="/dashboard"
+                  <UserButton.Link 
+                    label="Dashboard" 
+                    labelIcon={<LayoutDashboard size={16} />} 
+                    href="/dashboard" 
                   />
                 </UserButton.MenuItems>
               </UserButton>
@@ -72,8 +72,8 @@ export default function Navbar() {
 
         <SignedOut>
           <div className="navbar-right" style={{ marginLeft: 'auto' }}>
-            <button
-              className="btn btn-primary"
+            <button 
+              className="btn btn-primary" 
               onClick={() => navigate('/login')}
               style={{ padding: '8px 20px', gap: '8px', display: 'flex', alignItems: 'center' }}
             >

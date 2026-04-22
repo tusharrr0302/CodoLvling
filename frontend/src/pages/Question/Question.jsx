@@ -11,7 +11,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getProblem, getState } from '../../data/problems';
 import { getRegionById } from '../../data/regions';
 import { getEnemyForProblem } from '../../data/enemies';
-import { MAGIC_ITEMS, getItemById } from '../../data/items';
 import { useProgress } from '../../context/ProgressContext';
 import { useAuth } from '../../context/AuthContext';
 import { runCode } from '../../utils/codeRunner';
@@ -31,7 +30,7 @@ export default function Question() {
   const { problemId } = useParams();
   const navigate = useNavigate();
   const problem = getProblem(problemId);
-  const { progress, markSolved, calculateRewards, useItem } = useProgress();
+  const { progress, markSolved, calculateRewards } = useProgress();
 
   const [selectedLang, setSelectedLang] = useState('javascript');
   const [codesByLanguage, setCodesByLanguage] = useState({});
@@ -61,19 +60,13 @@ export default function Question() {
   const [floatingDamage, setFloatingDamage] = useState([]);
   const [showCompanion, setShowCompanion] = useState(false);
   const [damageDealt, setDamageDealt] = useState(0);
-  const [showInventory, setShowInventory] = useState(false);
-  const [activeBuffs, setActiveBuffs] = useState({
-    atkMultiplier: 1,
-    shield: false,
-    doubleXP: false
-  });
 
   // Screen shake effect
   const triggerScreenShake = () => {
     const arena = document.querySelector('.battle-arena');
     if (!arena) return;
-    gsap.fromTo(arena,
-      { x: -5 },
+    gsap.fromTo(arena, 
+      { x: -5 }, 
       { x: 5, duration: 0.05, repeat: 5, yoyo: true, onComplete: () => gsap.set(arena, { x: 0 }) }
     );
   };
@@ -94,7 +87,7 @@ export default function Question() {
   // Sync code when language or problem changes
   useEffect(() => {
     if (!problem) return;
-
+    
     const savedCode = codesByLanguage[selectedLang];
     if (savedCode) {
       setCode(savedCode);
@@ -174,7 +167,7 @@ export default function Question() {
       const results = await runCode(code, selectedLang, testCases, user?.token);
       setRunResults(results);
       setPanelOpen(true);
-
+      
       const passedCount = results.filter(r => r.passed).length;
       if (passedCount === results.length) {
         showCombatText('DRY RUN — O.K.', 'player-hit');
@@ -218,9 +211,9 @@ export default function Question() {
       if (!response.ok) throw new Error('Evaluation failed');
 
       const result = await response.json();
-      setSubmitResult({
-        results: result.results || [],
-        allPassed: result.passed
+      setSubmitResult({ 
+        results: result.results || [], 
+        allPassed: result.passed 
       });
       setAiFeedback(result);
       setPanelOpen(true);
@@ -231,22 +224,23 @@ export default function Question() {
       const passedCount = tcResults.filter(tc => tc.passed).length;
       const totalCount = Math.max(tcResults.length, testCases.length, 1);
       const correctness = passedCount / totalCount;
-
+      
       let damage = 0;
       if (correctness === 1) {
         damage = enemy.baseHp; // instant kill
       } else {
         damage = Math.floor(correctness * 100);
       }
-      
-      // Apply Attack Boost
-      if (activeBuffs.atkMultiplier > 1) {
-        damage = Math.floor(damage * activeBuffs.atkMultiplier);
-        setActiveBuffs(prev => ({ ...prev, atkMultiplier: 1 }));
-        showCombatText('BOOSTED HIT!', 'player-hit');
-      }
-
       damage = Math.max(0, damage);
+      
+      console.log({
+        passed: passedCount,
+        total: totalCount,
+        correctness,
+        damage,
+        enemyHP,
+        playerHP
+      });
 
       if (correctness === 1) {
         // Critical Strike / Full Success
@@ -265,15 +259,9 @@ export default function Question() {
         spawnDamageNumber(damage, 'enemy');
         setEnemyHP(prev => Math.max(0, prev - damage));
         flashHpBar(enemyHpBarRef, 'orange');
-
+        
         // Enemy counters
         setTimeout(() => {
-          if (activeBuffs.shield) {
-            showCombatText('BLOCK!', 'player-hit');
-            setActiveBuffs(prev => ({ ...prev, shield: false }));
-            return;
-          }
-
           let enemyDamage = Math.floor((1 - correctness) * (enemy.baseAttack || 20));
           enemyDamage = Math.max(0, enemyDamage);
           if (enemyDamage > 0) {
@@ -286,13 +274,6 @@ export default function Question() {
         // Failure
         showCombatText('FAILED!', 'enemy-hit');
         triggerScreenShake();
-
-        if (activeBuffs.shield) {
-          showCombatText('BLOCK!', 'player-hit');
-          setActiveBuffs(prev => ({ ...prev, shield: false }));
-          return;
-        }
-
         let enemyDamage = Math.floor((1 - correctness) * (enemy.baseAttack || 20));
         enemyDamage = Math.max(0, enemyDamage);
         setPlayerHP(prev => Math.max(0, prev - enemyDamage));
@@ -308,34 +289,6 @@ export default function Question() {
     }
   };
 
-  const handleUseItem = (itemId) => {
-    const item = getItemById(itemId);
-    if (!item) return;
-
-    if (useItem(itemId)) {
-      showCombatText(`USED ${item.name.toUpperCase()}`, 'player-hit');
-      
-      switch (item.effect.type) {
-        case 'heal':
-          setPlayerHP(prev => Math.min(100, prev + item.effect.value));
-          flashHpBar(playerHpBarRef, 'green');
-          break;
-        case 'atk':
-          setActiveBuffs(prev => ({ ...prev, atkMultiplier: item.effect.value }));
-          break;
-        case 'shield':
-          setActiveBuffs(prev => ({ ...prev, shield: true }));
-          break;
-        case 'xp-boost':
-          setActiveBuffs(prev => ({ ...prev, doubleXP: true }));
-          break;
-        case 'hint':
-          setShowHint(true);
-          break;
-      }
-    }
-  };
-
   const getLangExtension = () => {
     switch (selectedLang) {
       case 'python': return [python()];
@@ -348,7 +301,7 @@ export default function Question() {
 
   const addCustomCase = () => {
     if (!customInput.trim()) return;
-
+    
     let parsedInput;
     try {
       // Try to parse input if it looks like JSON (array or object)
@@ -359,7 +312,7 @@ export default function Question() {
     }
 
     setTestCases(prev => [
-      ...prev,
+      ...prev, 
       { input: parsedInput, expected: customExpected || '?' }
     ]);
     setCustomInput('');
@@ -416,45 +369,7 @@ export default function Question() {
             <span className="coins-display">
               <Zap size={13} color="#FACC15" /> {progress.coins}
             </span>
-            <button 
-              className={`inventory-toggle-btn ${showInventory ? 'active' : ''}`}
-              onClick={() => setShowInventory(!showInventory)}
-            >
-              🎒
-            </button>
           </div>
-          
-          <AnimatePresence>
-            {showInventory && (
-              <motion.div 
-                className="battle-inventory-drawer bg-white neo-border neo-shadow"
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              >
-                <div className="inventory-header">YOUR ITEMS</div>
-                <div className="inventory-grid">
-                  {progress.inventory.length > 0 ? (
-                    progress.inventory.map((itemId, idx) => {
-                      const item = getItemById(itemId);
-                      return (
-                        <button 
-                          key={idx} 
-                          className="inventory-item-btn" 
-                          onClick={() => handleUseItem(itemId)}
-                          title={item?.name}
-                        >
-                          {item?.icon}
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="inventory-empty">EMPTY</div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
           <AnimatePresence>
             {combatText && combatText.type === 'player-hit' && (
               <motion.div
@@ -725,8 +640,8 @@ export default function Question() {
                           {result.passed
                             ? <CheckCircle2 size={14} color="var(--success)" />
                             : result.error
-                              ? <AlertCircle size={14} color="var(--hard)" />
-                              : <XCircle size={14} color="var(--hard)" />
+                            ? <AlertCircle size={14} color="var(--hard)" />
+                            : <XCircle size={14} color="var(--hard)" />
                           }
                           <span>Case {i + 1}</span>
                           {result.duration && <span className="tc-duration">{result.duration}ms</span>}
@@ -802,8 +717,8 @@ export default function Question() {
         </div>
       </div>
       {/* AI COMPANION */}
-      <AICompanion
-        isVisible={showCompanion}
+      <AICompanion 
+        isVisible={showCompanion} 
         feedback={aiFeedback?.feedback}
         nextStep={aiFeedback?.next_step}
       />

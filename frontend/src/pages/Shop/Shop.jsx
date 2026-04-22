@@ -11,7 +11,7 @@ export default function Shop() {
 
   const allItems = Object.values(ITEMS);
   const consumables = allItems.filter(i => i.type === 'consumable' || i.type === 'boost' || i.type === 'passive');
-
+  
   const cosmetics = [
     { id: 'frame_gold', name: 'Golden Aura Frame', type: 'cosmetic', rarity: 'legendary', price: 1000, description: 'Surrounds your avatar in gold.', icon: '✨' },
     { id: 'dmg_pixel', name: 'Retro Damage Text', type: 'cosmetic', rarity: 'rare', price: 400, description: 'Changes damage numbers to pixel font.', icon: '👾' },
@@ -36,8 +36,8 @@ export default function Shop() {
 
   return (
     <div className="page shop-page animate-fadeIn">
-      <PageHeader
-        title="THE MERCHANT'S VAULT"
+      <PageHeader 
+        title="THE MERCHANT'S VAULT" 
         description="Exchange your hard-earned coins for advantages in the Abyss."
       />
 

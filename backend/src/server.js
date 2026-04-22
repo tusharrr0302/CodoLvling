@@ -16,10 +16,10 @@ const setupMultiplayer = require('./socket/multiplayerHandler');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST'],
-    },
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
 });
 
 // Clerk middleware must be registered BEFORE express.json() so it can
@@ -45,7 +45,7 @@ app.use('/api/evaluate', geminiRoutes);
 
 // Health check
 app.get('/api', (req, res) => {
-    res.send('Codo Leveling API is running (Supabase + Clerk)');
+  res.send('Codo Leveling API is running (Supabase + Clerk)');
 });
 
 // Setup Socket.io
@@ -53,5 +53,5 @@ setupMultiplayer(io);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
