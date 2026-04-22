@@ -3,6 +3,8 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { handleMultiplayer } from './src/socket/multiplayerHandler.js';
+import { handlePvP } from './src/socket/pvpHandler.js';
 
 dotenv.config();
 
@@ -25,6 +27,9 @@ app.get('/', (req, res) => {
 // Socket.io connection
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
+
+  handleMultiplayer(io, socket);
+  handlePvP(io, socket);
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);

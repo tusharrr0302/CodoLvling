@@ -13,14 +13,21 @@ if (!PUBLISHABLE_KEY) {
   console.warn("Missing Publishable Key")
 }
 
+import { AuthProvider } from './context/AuthContext.jsx'
+import { MultiplayerProvider } from './context/MultiplayerContext.jsx'
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ClerkProvider publishableKey={PUBLISHABLE_KEY || "pk_test_placeholder"}>
-      <ProgressProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </ProgressProvider>
+      <AuthProvider>
+        <ProgressProvider>
+          <MultiplayerProvider>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </MultiplayerProvider>
+        </ProgressProvider>
+      </AuthProvider>
     </ClerkProvider>
   </React.StrictMode>,
 )

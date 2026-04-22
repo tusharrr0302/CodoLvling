@@ -1,0 +1,99 @@
+.shop-page {
+  background-color: var(--neo-beige);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.shop-card {
+  padding: 20px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.shop-card.active {
+  border-width: 4px;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px #000;
+}
+
+.item-icon-wrap {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  border: 3px solid #000;
+}
+
+.item-name {
+  font-size: 1.125rem;
+  line-height: 1.2;
+}
+
+.item-price {
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.detail-visual {
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inventory-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.inventory-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.inventory-list::-webkit-scrollbar-track {
+  background: #111;
+}
+
+.inventory-list::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+.inventory-item {
+  transition: all 0.2s ease;
+}
+
+.inventory-item:hover {
+  background-color: #1a1a1a;
+  border-color: #555;
+}
+
+@media (max-width: 768px) {
+  .shop-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .detail-visual {
+    width: 120px;
+    height: 120px;
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-grid {
+    grid-template-columns: 1fr;
+  }
+}

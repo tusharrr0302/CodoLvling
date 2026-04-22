@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getProblem, getState } from '../../data/problems';
 import { getRegionById } from '../../data/regions';
 import { getEnemyForProblem } from '../../data/enemies';
+import { MAGIC_ITEMS, getItemById } from '../../data/items';
 import { useProgress } from '../../context/ProgressContext';
 import { useAuth } from '../../context/AuthContext';
 import { runCode } from '../../utils/codeRunner';
@@ -30,7 +31,7 @@ export default function Question() {
   const { problemId } = useParams();
   const navigate = useNavigate();
   const problem = getProblem(problemId);
-  const { progress, markSolved, calculateRewards } = useProgress();
+  const { progress, markSolved, calculateRewards, useItem } = useProgress();
 
   const [selectedLang, setSelectedLang] = useState('javascript');
   const [codesByLanguage, setCodesByLanguage] = useState({});
@@ -60,6 +61,12 @@ export default function Question() {
   const [floatingDamage, setFloatingDamage] = useState([]);
   const [showCompanion, setShowCompanion] = useState(false);
   const [damageDealt, setDamageDealt] = useState(0);
+  const [showInventory, setShowInventory] = useState(false);
+  const [activeBuffs, setActiveBuffs] = useState({
+    atkMultiplier: 1,
+    shield: false,
+    doubleXP: false
+  });
 
   // Screen shake effect
   const triggerScreenShake = () => {
@@ -231,16 +238,15 @@ export default function Question() {
       } else {
         damage = Math.floor(correctness * 100);
       }
-      damage = Math.max(0, damage);
+      
+      // Apply Attack Boost
+      if (activeBuffs.atkMultiplier > 1) {
+        damage = Math.floor(damage * activeBuffs.atkMultiplier);
+        setActiveBuffs(prev => ({ ...prev, atkMultiplier: 1 }));
+        showCombatText('BOOSTED HIT!', 'player-hit');
+      }
 
-      console.log({
-        passed: passedCount,
-        total: totalCount,
-        correctness,
-        damage,
-        enemyHP,
-        playerHP
-      });
+      damage = Math.max(0, damage);
 
       if (correctness === 1) {
         // Critical Strike / Full Success
@@ -262,6 +268,12 @@ export default function Question() {
 
         // Enemy counters
         setTimeout(() => {
+          if (activeBuffs.shield) {
+            showCombatText('BLOCK!', 'player-hit');
+            setActiveBuffs(prev => ({ ...prev, shield: false }));
+            return;
+          }
+
           let enemyDamage = Math.floor((1 - correctness) * (enemy.baseAttack || 20));
           enemyDamage = Math.max(0, enemyDamage);
           if (enemyDamage > 0) {
@@ -274,6 +286,13 @@ export default function Question() {
         // Failure
         showCombatText('FAILED!', 'enemy-hit');
         triggerScreenShake();
+
+        if (activeBuffs.shield) {
+          showCombatText('BLOCK!', 'player-hit');
+          setActiveBuffs(prev => ({ ...prev, shield: false }));
+          return;
+        }
+
         let enemyDamage = Math.floor((1 - correctness) * (enemy.baseAttack || 20));
         enemyDamage = Math.max(0, enemyDamage);
         setPlayerHP(prev => Math.max(0, prev - enemyDamage));
@@ -286,6 +305,34 @@ export default function Question() {
       showCombatText('ERROR!', 'enemy-hit');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleUseItem = (itemId) => {
+    const item = getItemById(itemId);
+    if (!item) return;
+
+    if (useItem(itemId)) {
+      showCombatText(`USED ${item.name.toUpperCase()}`, 'player-hit');
+      
+      switch (item.effect.type) {
+        case 'heal':
+          setPlayerHP(prev => Math.min(100, prev + item.effect.value));
+          flashHpBar(playerHpBarRef, 'green');
+          break;
+        case 'atk':
+          setActiveBuffs(prev => ({ ...prev, atkMultiplier: item.effect.value }));
+          break;
+        case 'shield':
+          setActiveBuffs(prev => ({ ...prev, shield: true }));
+          break;
+        case 'xp-boost':
+          setActiveBuffs(prev => ({ ...prev, doubleXP: true }));
+          break;
+        case 'hint':
+          setShowHint(true);
+          break;
+      }
     }
   };
 
@@ -369,7 +416,45 @@ export default function Question() {
             <span className="coins-display">
               <Zap size={13} color="#FACC15" /> {progress.coins}
             </span>
+            <button 
+              className={`inventory-toggle-btn ${showInventory ? 'active' : ''}`}
+              onClick={() => setShowInventory(!showInventory)}
+            >
+              🎒
+            </button>
           </div>
+          
+          <AnimatePresence>
+            {showInventory && (
+              <motion.div 
+                className="battle-inventory-drawer bg-white neo-border neo-shadow"
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              >
+                <div className="inventory-header">YOUR ITEMS</div>
+                <div className="inventory-grid">
+                  {progress.inventory.length > 0 ? (
+                    progress.inventory.map((itemId, idx) => {
+                      const item = getItemById(itemId);
+                      return (
+                        <button 
+                          key={idx} 
+                          className="inventory-item-btn" 
+                          onClick={() => handleUseItem(itemId)}
+                          title={item?.name}
+                        >
+                          {item?.icon}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="inventory-empty">EMPTY</div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <AnimatePresence>
             {combatText && combatText.type === 'player-hit' && (
               <motion.div
