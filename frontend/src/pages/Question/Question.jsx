@@ -1,18 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Send, Plus, ChevronDown, ChevronUp, Lightbulb, CheckCircle2, XCircle, AlertCircle, Shield, Zap } from 'lucide-react';
+import { ArrowLeft, Play, Send, Plus, ChevronDown, ChevronUp, Lightbulb, CheckCircle2, XCircle, AlertCircle, Shield, Zap, Backpack } from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
 import { cpp } from '@codemirror/lang-cpp';
 import { oneDark } from '@codemirror/theme-one-dark';
+import { EditorView } from '@codemirror/view';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProblem, getState } from '../../data/problems';
 import { getRegionById } from '../../data/regions';
 import { getEnemyForProblem } from '../../data/enemies';
 import { useProgress } from '../../context/ProgressContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { runCode } from '../../utils/codeRunner';
 import gsap from 'gsap';
 import AICompanion from '../../components/Battle/AICompanion';
@@ -41,6 +43,7 @@ export default function Question() {
   const [aiFeedback, setAiFeedback] = useState(null);
 
   const { user } = useAuth();
+  const { isDark } = useTheme();
 
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,6 +63,64 @@ export default function Question() {
   const [floatingDamage, setFloatingDamage] = useState([]);
   const [showCompanion, setShowCompanion] = useState(false);
   const [damageDealt, setDamageDealt] = useState(0);
+
+  // Inventory & Magic Items
+  const [inventory, setInventory] = useState([]);
+  const [showInventory, setShowInventory] = useState(false);
+  const [activeItems, setActiveItems] = useState({});
+
+  useEffect(() => {
+    if (user?.token) {
+      fetch('/api/inventory', {
+        headers: { Authorization: `Bearer ${user.token}` }
+      })
+      .then(res => res.json())
+      .then(data => setInventory(data))
+      .catch(err => console.error("Failed to load inventory", err));
+    }
+  }, [user]);
+
+  const handleUseItem = async (item) => {
+    if (!user?.token) return;
+    
+    // Example immediate effects
+    if (item.items.slug === 'hint_scroll') {
+      setShowHint(true);
+      showCombatText('HINT REVEALED!', 'player-hit');
+    } else if (item.items.slug === 'focus_charm') {
+      setAttempts(0);
+      showCombatText('ATTEMPTS RESET!', 'player-hit');
+    } else if (item.items.slug === 'healing_potion') {
+      setPlayerHP(100);
+      showCombatText('+HP HEALED!', 'player-hit');
+    } else {
+      // Passive/Buff effect for next submission
+      setActiveItems(prev => ({ ...prev, [item.items.slug]: true }));
+      showCombatText(`${item.items.name.toUpperCase()} ACTIVATED!`, 'player-hit');
+    }
+
+    // Call backend to consume item
+    try {
+      await fetch('/api/inventory/use', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({ itemId: item.item_id })
+      });
+      // Refresh inventory
+      const res = await fetch('/api/inventory', {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      const data = await res.json();
+      setInventory(data);
+    } catch (e) {
+      console.error(e);
+    }
+    
+    setShowInventory(false);
+  };
 
   // Screen shake effect
   const triggerScreenShake = () => {
@@ -219,34 +280,28 @@ export default function Question() {
       setPanelOpen(true);
       setShowCompanion(true);
 
-      // Damage Calculation: Purely based on test cases!
+      // Damage Calculation
       const tcResults = result.results || [];
       const passedCount = tcResults.filter(tc => tc.passed).length;
       const totalCount = Math.max(tcResults.length, testCases.length, 1);
       const correctness = passedCount / totalCount;
       
+      const playerBasePower = 50 * (progress?.level || 1);
+      
       let damage = 0;
       if (correctness === 1) {
-        damage = enemy.baseHp; // instant kill
+        damage = enemyHP; // instant kill, cap at remaining HP
       } else {
-        damage = Math.floor(correctness * 100);
+        damage = Math.floor(correctness * playerBasePower);
+        damage = Math.min(enemyHP, damage);
       }
       damage = Math.max(0, damage);
       
-      console.log({
-        passed: passedCount,
-        total: totalCount,
-        correctness,
-        damage,
-        enemyHP,
-        playerHP
-      });
-
       if (correctness === 1) {
         // Critical Strike / Full Success
         gsap.to({}, { duration: 0, onStart: triggerScreenShake });
         showCombatText('CRITICAL STRIKE!', 'player-hit');
-        spawnDamageNumber(damage, 'enemy');
+        if (damage > 0) spawnDamageNumber(damage, 'enemy');
         setEnemyHP(prev => Math.max(0, prev - damage));
         flashHpBar(enemyHpBarRef, 'red');
 
@@ -256,13 +311,18 @@ export default function Question() {
       } else if (correctness > 0) {
         // Partial Success
         showCombatText('HIT!', 'player-hit');
-        spawnDamageNumber(damage, 'enemy');
+        if (damage > 0) spawnDamageNumber(damage, 'enemy');
         setEnemyHP(prev => Math.max(0, prev - damage));
         flashHpBar(enemyHpBarRef, 'orange');
         
         // Enemy counters
         setTimeout(() => {
           let enemyDamage = Math.floor((1 - correctness) * (enemy.baseAttack || 20));
+          if (activeItems.retry_shield) {
+            enemyDamage = 0;
+            showCombatText('BLOCKED!', 'player-hit');
+            setActiveItems(prev => ({ ...prev, retry_shield: false }));
+          }
           enemyDamage = Math.max(0, enemyDamage);
           if (enemyDamage > 0) {
             setPlayerHP(prev => Math.max(0, prev - enemyDamage));
@@ -275,10 +335,17 @@ export default function Question() {
         showCombatText('FAILED!', 'enemy-hit');
         triggerScreenShake();
         let enemyDamage = Math.floor((1 - correctness) * (enemy.baseAttack || 20));
+        if (activeItems.retry_shield) {
+            enemyDamage = 0;
+            showCombatText('BLOCKED!', 'player-hit');
+            setActiveItems(prev => ({ ...prev, retry_shield: false }));
+        }
         enemyDamage = Math.max(0, enemyDamage);
-        setPlayerHP(prev => Math.max(0, prev - enemyDamage));
-        spawnDamageNumber(enemyDamage, 'player');
-        flashHpBar(playerHpBarRef, 'green');
+        if (enemyDamage > 0) {
+          setPlayerHP(prev => Math.max(0, prev - enemyDamage));
+          spawnDamageNumber(enemyDamage, 'player');
+          flashHpBar(playerHpBarRef, 'green');
+        }
       }
 
     } catch (err) {
@@ -513,6 +580,13 @@ export default function Question() {
               <div className="editor-toolbar-right">
                 <button
                   className="btn btn-outline btn-sm"
+                  onClick={() => setShowInventory(v => !v)}
+                  title="Bag / Magic Items"
+                >
+                  <Backpack size={14} /> Bag
+                </button>
+                <button
+                  className="btn btn-outline btn-sm"
                   onClick={handleRun}
                   disabled={isRunning || playerHP <= 0}
                 >
@@ -530,13 +604,45 @@ export default function Question() {
               </div>
             </div>
 
+            {/* Inventory Drawer */}
+            <AnimatePresence>
+              {showInventory && (
+                <motion.div 
+                  className="inventory-drawer"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                >
+                  <div className="inventory-header">
+                    <span className="section-label">Magic Items</span>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setShowInventory(false)}>Close</button>
+                  </div>
+                  {inventory.length === 0 ? (
+                    <div className="inventory-empty">Your bag is empty. Visit the Shop to buy items!</div>
+                  ) : (
+                    <div className="inventory-grid">
+                      {inventory.map((invItem) => (
+                        <div key={invItem.id} className="inv-item-card neo-border" onClick={() => handleUseItem(invItem)}>
+                          <div className="inv-item-icon">{invItem.items?.icon || '📦'}</div>
+                          <div className="inv-item-info">
+                            <div className="inv-item-name">{invItem.items?.name}</div>
+                            <div className="inv-item-qty">x{invItem.quantity}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Code Editor */}
             <div className="editor-body">
               <CodeMirror
                 value={code}
                 onChange={handleCodeChange}
                 extensions={getLangExtension()}
-                theme={oneDark}
+                theme={isDark ? oneDark : EditorView.theme({}, { dark: false })}
                 height="100%"
                 style={{ height: '100%' }}
                 basicSetup={{

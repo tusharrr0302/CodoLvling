@@ -23,6 +23,7 @@ import PostDetail from './pages/Community/PostDetail';
 import CreatePost from './pages/Community/CreatePost';
 import Footer from './components/Footer/Footer';
 import { MultiplayerProvider } from './context/MultiplayerContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Question page gets full-screen without navbar
 function Layout({ children }) {
@@ -54,9 +55,10 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ProgressProvider>
-          <MultiplayerProvider>
-            <Layout>
+        <ThemeProvider>
+          <ProgressProvider>
+            <MultiplayerProvider>
+              <Layout>
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/story/:chapterId" element={<ProtectedRoute><StoryEngine /></ProtectedRoute>} />
@@ -79,9 +81,10 @@ function App() {
                 <Route path="/community/:postId" element={<ProtectedRoute><PostDetail /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-            </Layout>
-          </MultiplayerProvider>
-        </ProgressProvider>
+              </Layout>
+            </MultiplayerProvider>
+          </ProgressProvider>
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -742,3 +742,92 @@
     font-size: 1.8rem;
   }
 }
+
+/* ==========================================
+   INVENTORY DRAWER IN CODING AREA
+   ========================================== */
+.inventory-drawer {
+  background: var(--bg-surface);
+  border-bottom: 3px solid #000;
+  padding: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,0.05);
+}
+
+.inventory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.inventory-empty {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 12px 0;
+  font-style: italic;
+}
+
+.inventory-grid {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+.inv-item-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated);
+  padding: 8px 12px;
+  border-radius: 8px;
+  min-width: 140px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.inv-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 #FFD600;
+  background: #fff;
+}
+
+[data-theme="dark"] .inv-item-card:hover {
+  background: var(--bg-hover);
+  box-shadow: 4px 4px 0 #FFD600;
+}
+
+.inv-item-icon {
+  font-size: 1.2rem;
+  background: rgba(0,0,0,0.05);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+[data-theme="dark"] .inv-item-icon {
+  background: rgba(255,255,255,0.05);
+}
+
+.inv-item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.inv-item-name {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.inv-item-qty {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
