@@ -236,3 +236,75 @@ ALTER TABLE friends ENABLE ROW LEVEL SECURITY;
 
 -- Public read for leaderboard-style queries
 CREATE POLICY "Public read player_profiles" ON player_profiles FOR SELECT USING (true);
+
+-- ============================================================
+-- COMMUNITY SYSTEM — Posts, Comments, Votes
+-- ============================================================
+
+-- Post type enum
+CREATE TYPE post_type AS ENUM ('QUESTION', 'DISCUSSION', 'SOLUTION');
+
+-- -------------------------------------------------------
+-- posts
+-- -------------------------------------------------------
+CREATE TABLE posts (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clerk_id     TEXT NOT NULL REFERENCES player_profiles(clerk_id) ON DELETE CASCADE,
+  title        TEXT NOT NULL,
+  content      TEXT NOT NULL,
+  type         post_type NOT NULL DEFAULT 'DISCUSSION',
+  tags         TEXT[] NOT NULL DEFAULT '{}',
+  code_snippet TEXT,
+  code_lang    TEXT,
+  vote_score   INT NOT NULL DEFAULT 0,
+  views        INT NOT NULL DEFAULT 0,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -------------------------------------------------------
+-- comments (threaded via parent_id self-reference)
+-- -------------------------------------------------------
+CREATE TABLE comments (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id     UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  clerk_id    TEXT NOT NULL REFERENCES player_profiles(clerk_id) ON DELETE CASCADE,
+  parent_id   UUID REFERENCES comments(id) ON DELETE CASCADE,
+  content     TEXT NOT NULL,
+  vote_score  INT NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- -------------------------------------------------------
+-- votes (value: +1 upvote, -1 downvote)
+-- Exactly one of post_id or comment_id must be set.
+-- -------------------------------------------------------
+CREATE TABLE votes (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  clerk_id    TEXT NOT NULL REFERENCES player_profiles(clerk_id) ON DELETE CASCADE,
+  post_id     UUID REFERENCES posts(id) ON DELETE CASCADE,
+  comment_id  UUID REFERENCES comments(id) ON DELETE CASCADE,
+  value       SMALLINT NOT NULL CHECK (value IN (-1, 1)),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(clerk_id, post_id),
+  UNIQUE(clerk_id, comment_id)
+);
+
+-- Indexes for performance
+CREATE INDEX idx_posts_clerk_id     ON posts(clerk_id);
+CREATE INDEX idx_posts_tags         ON posts USING GIN(tags);
+CREATE INDEX idx_posts_created_at   ON posts(created_at DESC);
+CREATE INDEX idx_posts_vote_score   ON posts(vote_score DESC);
+CREATE INDEX idx_comments_post_id   ON comments(post_id);
+CREATE INDEX idx_comments_parent_id ON comments(parent_id);
+CREATE INDEX idx_votes_post_id      ON votes(post_id);
+CREATE INDEX idx_votes_comment_id   ON votes(comment_id);
+
+-- RLS
+ALTER TABLE posts    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE votes    ENABLE ROW LEVEL SECURITY;
+
+-- Public reads
+CREATE POLICY "Public read posts"    ON posts    FOR SELECT USING (true);
+CREATE POLICY "Public read comments" ON comments FOR SELECT USING (true);

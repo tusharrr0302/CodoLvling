@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Map, FlaskConical, ShoppingCart, Zap, Swords, LayoutDashboard, LogIn, Trophy } from 'lucide-react';
+import { Map, FlaskConical, ShoppingCart, Zap, Swords, LayoutDashboard, LogIn, Trophy, Users } from 'lucide-react';
 import { UserButton, SignedIn, SignedOut } from '@clerk/clerk-react';
 import { useProgress } from '../../context/ProgressContext';
 import './Navbar.css';
@@ -9,8 +9,10 @@ const NAV_ITEMS = [
   { path: '/map',          label: 'World Map',   icon: Map },
   { path: '/pvp',          label: 'Arena',       icon: Swords },
   { path: '/leaderboard',  label: 'Leaderboard', icon: Trophy },
+  { path: '/community',    label: 'Community',   icon: Users },
   { path: '/shop',         label: 'Shop',        icon: ShoppingCart },
 ];
+
 
 export default function Navbar() {
   const location = useLocation();

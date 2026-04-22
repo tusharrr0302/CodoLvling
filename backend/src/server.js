@@ -11,7 +11,9 @@ const shopRoutes = require('./routes/shopRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const progressRoutes = require('./routes/progressRoutes');
 const geminiRoutes = require('./routes/geminiRoutes');
+const communityRoutes = require('./routes/communityRoutes');
 const setupMultiplayer = require('./socket/multiplayerHandler');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -42,6 +44,8 @@ app.use('/api/shop', shopRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/evaluate', geminiRoutes);
+app.use('/api/community', communityRoutes);
+
 
 // Health check
 app.get('/api', (req, res) => {

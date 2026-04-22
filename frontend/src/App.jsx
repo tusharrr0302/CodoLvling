@@ -18,6 +18,9 @@ import Docs from './pages/Docs/Docs';
 import Leaderboard from './pages/Leaderboard/Leaderboard';
 import StoryEngine from './pages/Story/StoryEngine';
 import Login from './pages/Login/Login';
+import Community from './pages/Community/Community';
+import PostDetail from './pages/Community/PostDetail';
+import CreatePost from './pages/Community/CreatePost';
 import Footer from './components/Footer/Footer';
 import { MultiplayerProvider } from './context/MultiplayerContext';
 
@@ -70,6 +73,10 @@ function App() {
                 <Route path="/battle/:roomId" element={<ProtectedRoute><MultiplayerArena /></ProtectedRoute>} />
                 <Route path="/docs" element={<ProtectedRoute><Docs /></ProtectedRoute>} />
                 <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+                <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+                <Route path="/community/new" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+                <Route path="/community/edit/:postId" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+                <Route path="/community/:postId" element={<ProtectedRoute><PostDetail /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
