@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { useUser, useAuth as useClerkAuth, useClerk } from '@clerk/clerk-react';
 
 // -------------------------------------------------------
@@ -41,6 +41,17 @@ export function AuthProvider({ children }) {
         getToken,
       }
     : null;
+
+  // Auto-provision Supabase player profile on first login.
+  // Calling /api/user/me will create the row if it doesn't exist yet.
+  useEffect(() => {
+    if (!isSignedIn || !isLoaded) return;
+    getToken().then((token) => {
+      fetch('/api/user/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch((err) => console.warn('[Auth] Profile sync failed:', err));
+    });
+  }, [isSignedIn, isLoaded]);
 
   const completeIntro = () => {
     localStorage.setItem('codo_has_seen_intro', 'true');
