@@ -70,18 +70,23 @@ export default function Question() {
   const [activeItems, setActiveItems] = useState({});
 
   useEffect(() => {
-    if (user?.token) {
-      fetch('/api/inventory', {
-        headers: { Authorization: `Bearer ${user.token}` }
-      })
-      .then(res => res.json())
-      .then(data => setInventory(data))
-      .catch(err => console.error("Failed to load inventory", err));
+    if (user?.getToken) {
+      user.getToken().then(token => {
+        fetch('/api/inventory', {
+          headers: { 
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          }
+        })
+        .then(res => res.json())
+        .then(data => setInventory(data))
+        .catch(err => console.error("Failed to load inventory", err));
+      });
     }
   }, [user]);
 
   const handleUseItem = async (item) => {
-    if (!user?.token) return;
+    if (!user) return;
     
     // Example immediate effects
     if (item.items.slug === 'hint_scroll') {
@@ -101,17 +106,22 @@ export default function Question() {
 
     // Call backend to consume item
     try {
+      const token = await user.getToken();
       await fetch('/api/inventory/use', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ itemId: item.item_id })
       });
       // Refresh inventory
       const res = await fetch('/api/inventory', {
-        headers: { Authorization: `Bearer ${user.token}` }
+        headers: { 
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        }
       });
       const data = await res.json();
       setInventory(data);
@@ -225,7 +235,8 @@ export default function Question() {
 
     try {
       // runCode is now async and handles remote execution for non-JS languages
-      const results = await runCode(code, selectedLang, testCases, user?.token);
+      const token = await user?.getToken();
+      const results = await runCode(code, selectedLang, testCases, token);
       setRunResults(results);
       setPanelOpen(true);
       
@@ -245,18 +256,20 @@ export default function Question() {
   };
 
   const handleSubmit = async () => {
-    if (!user?.token) return;
+    if (!user) return;
     setIsSubmitting(true);
     setRunResults(null);
     setAiFeedback(null);
     setShowCompanion(false);
 
     try {
+      const token = await user.getToken();
       const response = await fetch('/api/evaluate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           code,

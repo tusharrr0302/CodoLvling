@@ -11,7 +11,7 @@ router.post('/', authMiddleware, async (req, res) => {
   const { code, language, context, mode } = req.body;
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 
       const prompt = `
       You are an expert Code Judge and Mentor for "Codo Leveling".
@@ -58,7 +58,9 @@ router.post('/', authMiddleware, async (req, res) => {
     
     // Extract JSON from potential markdown blocks
     const jsonStr = text.replace(/```json|```/g, '').trim();
+    console.log('[AI Evaluation Raw]:', jsonStr);
     const evaluation = JSON.parse(jsonStr);
+    console.log('[AI Evaluation Parsed]:', evaluation);
 
     // Ensure numeric fields are present
     evaluation.correctness = evaluation.correctness ?? (evaluation.passed ? 1 : 0);
@@ -74,7 +76,8 @@ router.post('/', authMiddleware, async (req, res) => {
       feedback: "THE SYSTEM IS GLITCHING!",
       details: "Evaluation failed to complete. Try again.",
       complexity: { time: "N/A", space: "N/A" },
-      suggestions: ["Check connectivity", "Ensure API Key is valid"]
+      suggestions: ["Check connectivity", "Ensure API Key is valid"],
+      results: []
     });
   }
 });

@@ -4,7 +4,7 @@ import { useUser } from '@clerk/clerk-react';
 import { useProgress } from './ProgressContext';
 
 const MultiplayerContext = createContext(null);
-const SOCKET_URL = 'http://localhost:3000';
+const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export function MultiplayerProvider({ children }) {
   const { user } = useUser();

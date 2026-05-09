@@ -8,6 +8,19 @@
  */
 function normalize(val) {
   if (val === null || val === undefined) return String(val).toLowerCase(); // 'null' or 'undefined'
+  
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      if (typeof parsed === 'object' || Array.isArray(parsed)) {
+        return JSON.stringify(parsed);
+      }
+    } catch {
+      // Not valid JSON
+    }
+    return val;
+  }
+  
   if (Array.isArray(val) || typeof val === 'object') return JSON.stringify(val);
   return String(val);
 }
@@ -24,8 +37,17 @@ function runJSLocally(userCode, testCases) {
 
   for (const tc of testCases) {
     try {
-      // Ensure input is an array (multiple args support)
-      const args = Array.isArray(tc.input) ? tc.input : [tc.input];
+      // Parse input into an array of arguments
+      let args;
+      if (typeof tc.input === 'string') {
+        try {
+          args = JSON.parse(`[${tc.input}]`);
+        } catch {
+          args = [tc.input];
+        }
+      } else {
+        args = [tc.input];
+      }
       const expected = normalize(tc.expected);
 
       // eslint-disable-next-line no-new-func
@@ -76,6 +98,7 @@ export async function runCode(userCode, language, testCases, userToken = null) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'Authorization': `Bearer ${userToken}`
       },
       body: JSON.stringify({

@@ -46,6 +46,20 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/evaluate', geminiRoutes);
 app.use('/api/community', communityRoutes);
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled Error:', err);
+  // If headers are already sent, delegate to default error handler
+  if (res.headersSent) {
+    return next(err);
+  }
+  const statusCode = err.status || err.statusCode || 500;
+  res.status(statusCode).json({
+    error: err.message || 'Internal Server Error',
+    code: err.code || 'UNKNOWN_ERROR'
+  });
+});
+
 
 // Health check
 app.get('/api', (req, res) => {
